@@ -37,6 +37,8 @@
 
 #include <errno.h>             // For errno
 
+#include <iostream>            // For cerr, endl
+
 using namespace std;
 
 #ifdef WIN32
@@ -96,6 +98,18 @@ Socket::Socket(int type, int protocol) throw(SocketException) {
   // Make a new socket
   if ((sockDesc = socket(PF_INET, type, protocol)) < 0) {
     throw SocketException("Socket creation failed (socket())", true);
+  }
+  else {
+    //increase buffer size for cloudFPGA
+    int recvBufSize = 0x1000000;
+    int err = setsockopt(sockDesc, SOL_SOCKET, SO_RCVBUF, &recvBufSize, sizeof(recvBufSize));
+    if(err != 0) {
+        std::cerr <<" error socket buffer: " << err << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    int real_buffer_size = 0;
+    socklen_t len2 = sizeof(real_buffer_size);
+    err = getsockopt(sockDesc, SOL_SOCKET, SO_RCVBUF, &real_buffer_size, &len2);
   }
 }
 
